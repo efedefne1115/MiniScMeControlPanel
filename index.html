@@ -41,18 +41,21 @@
   .login-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 40px;
+    padding: 30px;
     border-radius: 12px;
     text-align: center;
-    width: 350px;
+    width: 90%;
+    max-width: 350px;
   }
   .login-card h2 { font-family: var(--font-display); color: var(--accent); margin-bottom: 20px; }
+  
   .sidebar {
     width: 260px;
     background: var(--surface);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
   }
   .sidebar-header {
     padding: 20px;
@@ -85,33 +88,43 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    width: 100%;
   }
   .topbar {
-    padding: 20px;
+    padding: 15px 20px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   .content-area {
     flex: 1;
-    padding: 20px;
+    padding: 15px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .view-section { display: none; }
   .view-section.active { display: block; }
+  
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
     background: var(--surface-2);
     border-radius: 8px;
-    overflow: hidden;
+    min-width: 500px;
   }
   th, td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
   }
   th {
     background: var(--surface);
@@ -145,7 +158,7 @@
   .chat-box {
     background: var(--bg);
     border: 1px solid var(--border);
-    height: 300px;
+    height: 250px;
     overflow-y: auto;
     padding: 15px;
     border-radius: 8px;
@@ -159,6 +172,44 @@
   }
   .badge.banned { background: var(--danger); color: white; }
   .badge.active { background: var(--success); color: black; }
+
+  /* MOBİL UYUMLULUK (TELEFONLAR İÇİN) */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      overflow-x: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-header {
+      display: none; /* Telefonda başlıktan tasarruf etmek için gizlendi */
+    }
+    .nav-btn {
+      padding: 12px 15px;
+      font-size: 13px;
+      white-space: nowrap;
+      border-bottom: none;
+      border-right: 1px solid var(--border);
+    }
+    .nav-btn:hover, .nav-btn.active {
+      border-left: none;
+      border-bottom: 4px solid var(--accent);
+    }
+    .main-content {
+      height: auto;
+      overflow: visible;
+    }
+    .content-area {
+      overflow-y: visible;
+    }
+  }
 </style>
 </head>
 <body>
@@ -175,100 +226,110 @@
   <div class="sidebar-header">
     <h1>MiniScMe Admin</h1>
   </div>
-  <button class="nav-btn active" onclick="switchTab('users', event)">Kullanıcı Hesapları</button>
-  <button class="nav-btn" onclick="switchTab('dms', event)">Özel Mesajlar (DM)</button>
-  <button class="nav-btn" onclick="switchTab('rooms', event)">Gruplar / Odalar</button>
-  <button class="nav-btn" onclick="switchTab('posts', event)">Ana Sayfa (Postlar)</button>
+  <button class="nav-btn active" onclick="switchTab('users', event)">Kullanıcılar</button>
+  <button class="nav-btn" onclick="switchTab('dms', event)">Özel Mesajlar</button>
+  <button class="nav-btn" onclick="switchTab('rooms', event)">Odalar</button>
+  <button class="nav-btn" onclick="switchTab('posts', event)">Postlar</button>
 </div>
 
 <div class="main-content">
   <div class="topbar">
-    <h2 id="pageTitle">Kullanıcı Hesapları</h2>
+    <h2 id="pageTitle" style="font-size: 18px;">Kullanıcılar</h2>
     <button class="btn btn-danger" onclick="logout()">Çıkış Yap</button>
   </div>
 
   <div class="content-area">
     <div id="users-view" class="view-section active">
-      <table>
-        <thead>
-          <tr>
-            <th>Kullanıcı Adı</th>
-            <th>ID (UID)</th>
-            <th>Durum</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody id="usersTableBody">
-          <tr><td colspan="4" style="text-align:center;">Yükleniyor...</td></tr>
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Kullanıcı Adı</th>
+              <th>ID (UID)</th>
+              <th>Durum</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="4" style="text-align:center;">Yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
       
       <div id="userDetailPanel" class="detail-panel">
-        <h3 id="udName" style="color:var(--accent); margin-bottom:10px;">Hesap Detayı</h3>
+        <h3 id="udName" style="color:var(--accent); margin-bottom:10px; font-size:16px;">Hesap Detayı</h3>
         <p><b>Bio:</b> <span id="udBio"></span></p>
         <p><b>Kayıt Tarihi:</b> <span id="udDate"></span></p>
         <hr style="border-color:var(--border); margin:15px 0;">
-        <button class="btn btn-danger" id="udBanBtn">Banla / Ban Kaldır</button>
-        <button class="btn btn-danger" style="background:var(--danger); color:white;" id="udDelBtn">Hesabı Kalıcı Sil</button>
-        <button class="btn" onclick="document.getElementById('userDetailPanel').style.display='none'">Kapat</button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-danger" id="udBanBtn">Banla / Ban Kaldır</button>
+          <button class="btn btn-danger" style="background:var(--danger); color:white;" id="udDelBtn">Hesabı Sil</button>
+          <button class="btn" onclick="document.getElementById('userDetailPanel').style.display='none'">Kapat</button>
+        </div>
       </div>
     </div>
 
     <div id="dms-view" class="view-section">
-      <p style="color:var(--text-dim); margin-bottom:15px;">Tüm birebir sohbetler listelenir.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Sohbet ID</th>
-            <th>Katılımcılar</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody id="dmsTableBody"></tbody>
-      </table>
+      <p style="color:var(--text-dim); margin-bottom:15px; font-size:13px;">Tüm birebir sohbetler listelenir.</p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Sohbet ID</th>
+              <th>Katılımcılar</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="dmsTableBody"></tbody>
+        </table>
+      </div>
 
       <div id="dmDetailPanel" class="detail-panel">
-        <h3 style="color:var(--accent);">Sohbet İçeriği</h3>
+        <h3 style="color:var(--accent); font-size:16px;">Sohbet İçeriği</h3>
         <div class="chat-box" id="dmChatBox"></div>
         <button class="btn" style="margin-top:10px;" onclick="document.getElementById('dmDetailPanel').style.display='none'">Kapat</button>
       </div>
     </div>
 
     <div id="rooms-view" class="view-section">
-      <table>
-        <thead>
-          <tr>
-            <th>Oda Adı</th>
-            <th>Gizlilik</th>
-            <th>Üye Sayısı</th>
-            <th>Kurucu (Sahip)</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody id="roomsTableBody"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Oda Adı</th>
+              <th>Gizlilik</th>
+              <th>Üye</th>
+              <th>Kurucu</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="roomsTableBody"></tbody>
+        </table>
+      </div>
 
       <div id="roomDetailPanel" class="detail-panel">
-        <h3 style="color:var(--accent);" id="rdName">Oda Detayı</h3>
+        <h3 style="color:var(--accent); font-size:16px;" id="rdName">Oda Detayı</h3>
         <p style="margin-top:10px;"><b>Üyeler:</b> <span id="rdMembers"></span></p>
-        <h4 style="margin-top:15px;">Oda Mesajları</h4>
+        <h4 style="margin-top:15px; font-size:14px;">Oda Mesajları</h4>
         <div class="chat-box" id="roomChatBox"></div>
         <button class="btn" style="margin-top:10px;" onclick="document.getElementById('roomDetailPanel').style.display='none'">Kapat</button>
       </div>
     </div>
 
     <div id="posts-view" class="view-section">
-      <table>
-        <thead>
-          <tr>
-            <th>Yazar (ID)</th>
-            <th>İçerik</th>
-            <th>Tarih</th>
-            <th>İşlem</th>
-          </tr>
-        </thead>
-        <tbody id="postsTableBody"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Yazar</th>
+              <th>İçerik</th>
+              <th>Tarih</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="postsTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -343,7 +404,7 @@
             <td style="font-size:11px;">${doc.id}</td>
             <td>${statusBadge}</td>
             <td>
-              <button class="btn btn-info" onclick="viewUser('${doc.id}', '${data.username}', \`${data.bio || ''}\`, ${isBanned})">Detay / Yönet</button>
+              <button class="btn btn-info" onclick="viewUser('${doc.id}', '${data.username}', \`${data.bio || ''}\`, ${isBanned})">Detay</button>
             </td>
           </tr>
         `;
@@ -361,7 +422,7 @@
     document.getElementById('udBio').innerText = bio || "Bio girilmemiş.";
     
     const banBtn = document.getElementById('udBanBtn');
-    banBtn.innerText = isBanned ? "Banı Kaldır" : "Geçici Ban At";
+    banBtn.innerText = isBanned ? "Banı Kaldır" : "Banla";
     banBtn.onclick = () => toggleBan(uid, isBanned);
     
     document.getElementById('udDelBtn').onclick = () => deleteUserDoc(uid);
@@ -377,7 +438,7 @@
   }
 
   async function deleteUserDoc(uid) {
-    if(confirm("DİKKAT: Bu işlem kullanıcının veritabanı profilini tamamen siler. Onaylıyor musunuz?")) {
+    if(confirm("DİKKAT: Kullanıcı profili silinecek. Onaylıyor musunuz?")) {
       await db.collection('users').doc(uid).delete();
       alert("Kullanıcı verisi silindi!");
       document.getElementById('userDetailPanel').style.display = 'none';
@@ -399,7 +460,7 @@
             <td style="font-size:11px;">${doc.id}</td>
             <td>${participants}</td>
             <td>
-              <button class="btn btn-info" onclick="viewDMMessages('${doc.id}')">Mesajları Gör</button>
+              <button class="btn btn-info" onclick="viewDMMessages('${doc.id}')">Mesajlar</button>
             </td>
           </tr>
         `;
@@ -437,7 +498,7 @@
             <td><b>${d.name}</b></td>
             <td>${d.visibility}</td>
             <td>${memCount}</td>
-            <td>${d.ownerId}</td>
+            <td style="font-size:11px;">${d.ownerId}</td>
             <td>
               <button class="btn btn-info" onclick='viewRoom("${doc.id}")'>Detay</button>
               <button class="btn btn-danger" onclick="deleteRoom('${doc.id}')">Sil</button>
@@ -482,7 +543,7 @@
         const d = doc.data();
         tbody.innerHTML += `
           <tr>
-            <td><b>${d.authorUsername}</b> <br><span style="font-size:10px;color:gray;">${d.authorId}</span></td>
+            <td><b>${d.authorUsername}</b></td>
             <td>${d.text}</td>
             <td style="font-size:11px;">${d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString() : ''}</td>
             <td>
