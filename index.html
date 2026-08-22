@@ -28,7 +28,7 @@
     height: 100vh;
     overflow: hidden;
   }
-  .overlay-screen {
+  #loginScreen {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: var(--bg);
@@ -38,7 +38,7 @@
     align-items: center;
     z-index: 999;
   }
-  .card {
+  .login-card {
     background: var(--surface);
     border: 1px solid var(--border);
     padding: 40px;
@@ -46,18 +46,7 @@
     text-align: center;
     width: 350px;
   }
-  .card h2 { font-family: var(--font-display); color: var(--accent); margin-bottom: 20px; }
-  .input-field {
-    width: 100%;
-    padding: 12px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    margin-bottom: 15px;
-    font-size: 14px;
-    text-align: center;
-  }
+  .login-card h2 { font-family: var(--font-display); color: var(--accent); margin-bottom: 20px; }
   .sidebar {
     width: 260px;
     background: var(--surface);
@@ -174,21 +163,10 @@
 </head>
 <body>
 
-<!-- 1. ŞİFRE EKRANI -->
-<div id="passwordScreen" class="overlay-screen">
-  <div class="card">
-    <h2>Güvenlik Kilidi</h2>
-    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Özel şifrenizi girin.</p>
-    <input type="password" id="passInput" class="input-field" placeholder="Şifre" onkeydown="if(event.key === 'KeyE' || event.keyCode === 13) checkPassword()">
-    <button class="btn btn-primary" onclick="checkPassword()">Kilidi Aç</button>
-  </div>
-</div>
-
-<!-- 2. GOOGLE GİRİŞ EKRANI -->
-<div id="loginScreen" class="overlay-screen" style="display: none;">
-  <div class="card">
+<div id="loginScreen">
+  <div class="login-card">
     <h2>MiniScMe Admin</h2>
-    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Yönetici hesabınızla Google üzerinden giriş yapın.</p>
+    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Paneli kullanabilmek için yönetici hesabınızla giriş yapın.</p>
     <button class="btn btn-primary" onclick="loginWithGoogle()">Google ile Giriş Yap</button>
   </div>
 </div>
@@ -315,25 +293,14 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  function checkPassword() {
-    const val = document.getElementById('passInput').value.trim();
-    const targetPass = "so11efecfcefeos1115";
-    
-    if (val === targetPass) {
-      document.getElementById('passwordScreen').style.display = 'none';
-      
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          document.getElementById('loginScreen').style.display = 'none';
-          loadUsers();
-        } else {
-          document.getElementById('loginScreen').style.display = 'flex';
-        }
-      });
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('loginScreen').style.display = 'none';
+      loadUsers();
     } else {
-      alert("Hatalı şifre!");
+      document.getElementById('loginScreen').style.display = 'flex';
     }
-  }
+  });
 
   function loginWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -344,7 +311,6 @@
 
   function logout() {
     auth.signOut();
-    location.reload();
   }
 
   function switchTab(tabId, event) {
