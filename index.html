@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniScMe - Kontrol Paneli</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;1,500&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0d;
+    --surface: #131318;
+    --surface-2: #1a1a21;
+    --border: #28282f;
+    --text: #f1efe8;
+    --text-dim: #9a97a3;
+    --accent: #c9a961;
+    --danger: #d97a7a;
+    --success: #84b89a;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Manrope', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* Ekranlar (Şifre & Giriş) */
+  .overlay-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    width: 350px;
+  }
+  .card h2 { font-family: var(--font-display); color: var(--accent); margin-bottom: 20px; }
+  .input-field {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-header h1 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--accent);
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 15px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: 0.2s;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--surface-2);
+    color: var(--text);
+    border-left: 4px solid var(--accent);
+  }
+  /* Main Content */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .topbar {
+    padding: 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .content-area {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+  
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--surface);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  td { font-size: 14px; }
+  
+  /* Buttons */
+  .btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #000; width: 100%; padding: 12px; font-size: 14px; }
+  .btn-danger { background: rgba(217,122,122,0.2); color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn-info { background: rgba(201,169,97,0.2); color: var(--accent); border: 1px solid var(--accent); }
+  
+  .detail-panel {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    display: none;
+  }
+  .chat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .msg-line { margin-bottom: 8px; }
+  .msg-line b { color: var(--accent); }
+  .badge {
+    padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;
+  }
+  .badge.banned { background: var(--danger); color: white; }
+  .badge.active { background: var(--success); color: black; }
+</style>
+</head>
+<body>
+
+<!-- 1. ŞİFRE EKRANI (Önce şifre sorulur) -->
+<div id="passwordScreen" class="overlay-screen">
+  <div class="card">
+    <h2>Güvenlik Kilidi</h2>
+    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Devam etmek için özel şifreyi girin.</p>
+    <input type="password" id="passInput" class="input-field" placeholder="Özel Şifre">
+    <button class="btn btn-primary" onclick="checkPassword()">Kilidi Aç</button>
+  </div>
+</div>
+
+<!-- 2. GOOGLE GİRİŞ EKRANI (Şifre geçilince görünür) -->
+<div id="loginScreen" class="overlay-screen" style="display: none;">
+  <div class="card">
+    <h2>MiniScMe Admin</h2>
+    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Yönetici hesabınızla Google üzerinden giriş yapın.</p>
+    <button class="btn btn-primary" onclick="loginWithGoogle()">Google ile Giriş Yap</button>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>MiniScMe Admin</h1>
+  </div>
+  <button class="nav-btn active" onclick="switchTab('users', event)">Kullanıcı Hesapları</button>
+  <button class="nav-btn" onclick="switchTab('dms', event)">Özel Mesajlar (DM)</button>
+  <button class="nav-btn" onclick="switchTab('rooms', event)">Gruplar / Odalar</button>
+  <button class="nav-btn" onclick="switchTab('posts', event)">Ana Sayfa (Postlar)</button>
+</div>
+
+<div class="main-content">
+  <div class="topbar">
+    <h2 id="pageTitle">Kullanıcı Hesapları</h2>
+    <button class="btn btn-danger" onclick="logout()">Çıkış Yap</button>
+  </div>
+
+  <div class="content-area">
+    
+    <!-- USERS VIEW -->
+    <div id="users-view" class="view-section active">
+      <table>
+        <thead>
+          <tr>
+            <th>Kullanıcı Adı</th>
+            <th>ID (UID)</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr><td colspan="4" style="text-align:center;">Yükleniyor...</td></tr>
+        </tbody>
+      </table>
+      
+      <div id="userDetailPanel" class="detail-panel">
+        <h3 id="udName" style="color:var(--accent); margin-bottom:10px;">Hesap Detayı</h3>
+        <p><b>Bio:</b> <span id="udBio"></span></p>
+        <p><b>Kayıt Tarihi:</b> <span id="udDate"></span></p>
+        <hr style="border-color:var(--border); margin:15px 0;">
+        <button class="btn btn-danger" id="udBanBtn">Banla / Ban Kaldır</button>
+        <button class="btn btn-danger" style="background:var(--danger); color:white;" id="udDelBtn">Hesabı Kalıcı Sil</button>
+        <button class="btn" onclick="document.getElementById('userDetailPanel').style.display='none'">Kapat</button>
+      </div>
+    </div>
+
+    <!-- DMs VIEW -->
+    <div id="dms-view" class="view-section">
+      <p style="color:var(--text-dim); margin-bottom:15px;">Tüm birebir sohbetler listelenir.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Sohbet ID</th>
+            <th>Katılımcılar</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody id="dmsTableBody"></tbody>
+      </table>
+
+      <div id="dmDetailPanel" class="detail-panel">
+        <h3 style="color:var(--accent);">Sohbet İçeriği</h3>
+        <div class="chat-box" id="dmChatBox"></div>
+        <button class="btn" style="margin-top:10px;" onclick="document.getElementById('dmDetailPanel').style.display='none'">Kapat</button>
+      </div>
+    </div>
+
+    <!-- ROOMS VIEW -->
+    <div id="rooms-view" class="view-section">
+      <table>
+        <thead>
+          <tr>
+            <th>Oda Adı</th>
+            <th>Gizlilik</th>
+            <th>Üye Sayısı</th>
+            <th>Kurucu (Sahip)</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody id="roomsTableBody"></tbody>
+      </table>
+
+      <div id="roomDetailPanel" class="detail-panel">
+        <h3 style="color:var(--accent);" id="rdName">Oda Detayı</h3>
+        <p style="margin-top:10px;"><b>Üyeler:</b> <span id="rdMembers"></span></p>
+        <h4 style="margin-top:15px;">Oda Mesajları</h4>
+        <div class="chat-box" id="roomChatBox"></div>
+        <button class="btn" style="margin-top:10px;" onclick="document.getElementById('roomDetailPanel').style.display='none'">Kapat</button>
+      </div>
+    </div>
+
+    <!-- POSTS VIEW -->
+    <div id="posts-view" class="view-section">
+      <table>
+        <thead>
+          <tr>
+            <th>Yazar (ID)</th>
+            <th>İçerik</th>
+            <th>Tarih</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="postsTableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9gTp5Tt3abnmO9h8or_KaR1YFyXOWbzY",
+    authDomain: "miniscme.firebaseapp.com",
+    databaseURL: "https://miniscme-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "miniscme",
+    storageBucket: "miniscme.firebasestorage.app",
+    messagingSenderId: "57915772656",
+    appId: "1:57915772656:web:50d91e52876436dd74fc35",
+    measurementId: "G-8SQPCNND7E"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Şifre kontrol mekanizması
+  function checkPassword() {
+    const val = document.getElementById('passInput').value;
+    if (val === "so11efecfcefeos1115") {
+      document.getElementById('passwordScreen').style.display = 'none';
+      // Şifre doğruysa şimdi Firebase oturumunu kontrol et
+      checkAuthStatus();
+    } else {
+      alert("Hatalı şifre!");
+    }
+  }
+
+  function checkAuthStatus() {
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('loginScreen').style.display = 'none';
+        loadUsers();
+      } else {
+        document.getElementById('loginScreen').style.display = 'flex';
+      }
+    });
+  }
+
+  function loginWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(error => {
+      alert("Giriş başarısız: " + error.message);
+    });
+  }
+
+  function logout() {
+    auth.signOut();
+    // Çıkış yapınca tekrar şifre ekranına döndürebiliriz veya sayfayı yenileyebiliriz
+    location.reload();
+  }
+
+  // Navigation Logic
+  function switchTab(tabId, event) {
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+    document.getElementById(tabId + '-view').classList.add('active');
+    
+    document.getElementById('pageTitle').innerText = event.target.innerText;
+
+    if(tabId === 'users') loadUsers();
+    if(tabId === 'dms') loadDMs();
+    if(tabId === 'rooms') loadRooms();
+    if(tabId === 'posts') loadPosts();
+  }
+
+  async function loadUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    try {
+      const snap = await db.collection('users').get();
+      tbody.innerHTML = '';
+      snap.forEach(doc => {
+        const data = doc.data();
+        const isBanned = data.banned === true;
+        const statusBadge = isBanned ? '<span class="badge banned">Banlı</span>' : '<span class="badge active">Aktif</span>';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${data.username || 'Bilinmiyor'}</b></td>
+            <td style="font-size:11px;">${doc.id}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn btn-info" onclick="viewUser('${doc.id}', '${data.username}', \`${data.bio || ''}\`, ${isBanned})">Detay / Yönet</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="4">Hata: Yetkiniz yok veya kurallar engelliyor.</td></tr>`;
+      console.error(e);
+    }
+  }
+
+  function viewUser(uid, username, bio, isBanned) {
+    const panel = document.getElementById('userDetailPanel');
+    panel.style.display = 'block';
+    document.getElementById('udName').innerText = username + " - Hesap Detayı";
+    document.getElementById('udBio').innerText = bio || "Bio girilmemiş.";
+    
+    const banBtn = document.getElementById('udBanBtn');
+    banBtn.innerText = isBanned ? "Banı Kaldır" : "Geçici Ban At";
+    banBtn.onclick = () => toggleBan(uid, isBanned);
+    
+    document.getElementById('udDelBtn').onclick = () => deleteUserDoc(uid);
+  }
+
+  async function toggleBan(uid, currentState) {
+    if(confirm(currentState ? "Bu kullanıcının banı kaldırılsın mı?" : "Bu kullanıcı banlansın mı?")) {
+      await db.collection('users').doc(uid).update({ banned: !currentState });
+      alert("İşlem başarılı!");
+      document.getElementById('userDetailPanel').style.display = 'none';
+      loadUsers();
+    }
+  }
+
+  async function deleteUserDoc(uid) {
+    if(confirm("DİKKAT: Bu işlem kullanıcının veritabanı profilini tamamen siler. Onaylıyor musunuz?")) {
+      await db.collection('users').doc(uid).delete();
+      alert("Kullanıcı verisi silindi!");
+      document.getElementById('userDetailPanel').style.display = 'none';
+      loadUsers();
+    }
+  }
+
+  async function loadDMs() {
+    const tbody = document.getElementById('dmsTableBody');
+    tbody.innerHTML = '<tr><td colspan="3">Yükleniyor...</td></tr>';
+    try {
+      const snap = await db.collection('chats').get();
+      tbody.innerHTML = '';
+      snap.forEach(doc => {
+        const data = doc.data();
+        const participants = data.participants ? data.participants.join(', ') : 'Bilinmiyor';
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-size:11px;">${doc.id}</td>
+            <td>${participants}</td>
+            <td>
+              <button class="btn btn-info" onclick="viewDMMessages('${doc.id}')">Mesajları Gör</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  async function viewDMMessages(chatId) {
+    const panel = document.getElementById('dmDetailPanel');
+    const box = document.getElementById('dmChatBox');
+    panel.style.display = 'block';
+    box.innerHTML = 'Yükleniyor...';
+    try {
+      const snap = await db.collection('chats').doc(chatId).collection('messages').orderBy('timestamp').get();
+      box.innerHTML = '';
+      if(snap.empty) { box.innerHTML = 'Hiç mesaj yok.'; return; }
+      snap.forEach(doc => {
+        const d = doc.data();
+        box.innerHTML += `<div class="msg-line"><b>${d.senderId}:</b> ${d.text}</div>`;
+      });
+    } catch(e) { box.innerHTML = 'Mesajlar okunamadı.'; }
+  }
+
+  async function loadRooms() {
+    const tbody = document.getElementById('roomsTableBody');
+    tbody.innerHTML = '<tr><td colspan="5">Yükleniyor...</td></tr>';
+    try {
+      const snap = await db.collection('rooms').get();
+      tbody.innerHTML = '';
+      snap.forEach(doc => {
+        const d = doc.data();
+        const memCount = d.members ? Object.keys(d.members).length : 0;
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${d.name}</b></td>
+            <td>${d.visibility}</td>
+            <td>${memCount}</td>
+            <td>${d.ownerId}</td>
+            <td>
+              <button class="btn btn-info" onclick='viewRoom("${doc.id}")'>Detay</button>
+              <button class="btn btn-danger" onclick="deleteRoom('${doc.id}')">Sil</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  async function viewRoom(roomId) {
+    const panel = document.getElementById('roomDetailPanel');
+    const box = document.getElementById('roomChatBox');
+    panel.style.display = 'block';
+    box.innerHTML = 'Mesajlar yükleniyor...';
+    try {
+      const snap = await db.collection('rooms').doc(roomId).collection('messages').orderBy('timestamp').get();
+      box.innerHTML = '';
+      if(snap.empty) { box.innerHTML = 'Hiç mesaj yok.'; return; }
+      snap.forEach(doc => {
+        const d = doc.data();
+        box.innerHTML += `<div class="msg-line"><b>${d.senderUsername || d.senderId}:</b> ${d.text}</div>`;
+      });
+    } catch(e) { box.innerHTML = 'Mesajlar okunamadı.'; }
+  }
+
+  async function deleteRoom(roomId) {
+    if(confirm("Oda kalıcı olarak silinecek emin misiniz?")) {
+      await db.collection('rooms').doc(roomId).delete();
+      alert("Oda silindi!");
+      loadRooms();
+    }
+  }
+
+  async function loadPosts() {
+    const tbody = document.getElementById('postsTableBody');
+    tbody.innerHTML = '<tr><td colspan="4">Yükleniyor...</td></tr>';
+    try {
+      const snap = await db.collection('posts').orderBy('timestamp', 'desc').get();
+      tbody.innerHTML = '';
+      snap.forEach(doc => {
+        const d.data = doc.data();
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${d.data.authorUsername}</b> <br><span style="font-size:10px;color:gray;">${d.data.authorId}</span></td>
+            <td>${d.data.text}</td>
+            <td style="font-size:11px;">${d.data.timestamp ? new Date(d.data.timestamp.toDate()).toLocaleString() : ''}</td>
+            <td>
+              <button class="btn btn-danger" onclick="deletePost('${doc.id}')">Sil</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  async function deletePost(postId) {
+    if(confirm("Post kalıcı olarak silinecek?")) {
+      await db.collection('posts').doc(postId).delete();
+      loadPosts();
+    }
+  }
+</script>
+</body>
+</html>
