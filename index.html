@@ -28,7 +28,6 @@
     height: 100vh;
     overflow: hidden;
   }
-  /* Ekranlar (Şifre & Giriş) */
   .overlay-screen {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -59,8 +58,6 @@
     font-size: 14px;
     text-align: center;
   }
-  
-  /* Sidebar */
   .sidebar {
     width: 260px;
     background: var(--surface);
@@ -94,7 +91,6 @@
     color: var(--text);
     border-left: 4px solid var(--accent);
   }
-  /* Main Content */
   .main-content {
     flex: 1;
     display: flex;
@@ -116,8 +112,6 @@
   }
   .view-section { display: none; }
   .view-section.active { display: block; }
-  
-  /* Tables */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -138,8 +132,6 @@
     text-transform: uppercase;
   }
   td { font-size: 14px; }
-  
-  /* Buttons */
   .btn {
     padding: 8px 12px;
     border: none;
@@ -153,7 +145,6 @@
   .btn-danger { background: rgba(217,122,122,0.2); color: var(--danger); border: 1px solid var(--danger); }
   .btn-danger:hover { background: var(--danger); color: #fff; }
   .btn-info { background: rgba(201,169,97,0.2); color: var(--accent); border: 1px solid var(--accent); }
-  
   .detail-panel {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -183,17 +174,17 @@
 </head>
 <body>
 
-<!-- 1. ŞİFRE EKRANI (Önce şifre sorulur) -->
+<!-- 1. ŞİFRE EKRANI -->
 <div id="passwordScreen" class="overlay-screen">
   <div class="card">
     <h2>Güvenlik Kilidi</h2>
-    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Devam etmek için özel şifreyi girin.</p>
-    <input type="password" id="passInput" class="input-field" placeholder="Özel Şifre">
+    <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Özel şifrenizi girin.</p>
+    <input type="password" id="passInput" class="input-field" placeholder="Şifre" onkeydown="if(event.key === 'KeyE' || event.keyCode === 13) checkPassword()">
     <button class="btn btn-primary" onclick="checkPassword()">Kilidi Aç</button>
   </div>
 </div>
 
-<!-- 2. GOOGLE GİRİŞ EKRANI (Şifre geçilince görünür) -->
+<!-- 2. GOOGLE GİRİŞ EKRANI -->
 <div id="loginScreen" class="overlay-screen" style="display: none;">
   <div class="card">
     <h2>MiniScMe Admin</h2>
@@ -219,8 +210,6 @@
   </div>
 
   <div class="content-area">
-    
-    <!-- USERS VIEW -->
     <div id="users-view" class="view-section active">
       <table>
         <thead>
@@ -247,7 +236,6 @@
       </div>
     </div>
 
-    <!-- DMs VIEW -->
     <div id="dms-view" class="view-section">
       <p style="color:var(--text-dim); margin-bottom:15px;">Tüm birebir sohbetler listelenir.</p>
       <table>
@@ -268,7 +256,6 @@
       </div>
     </div>
 
-    <!-- ROOMS VIEW -->
     <div id="rooms-view" class="view-section">
       <table>
         <thead>
@@ -292,7 +279,6 @@
       </div>
     </div>
 
-    <!-- POSTS VIEW -->
     <div id="posts-view" class="view-section">
       <table>
         <thead>
@@ -306,11 +292,9 @@
         <tbody id="postsTableBody"></tbody>
       </table>
     </div>
-
   </div>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -331,27 +315,24 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // Şifre kontrol mekanizması
   function checkPassword() {
-    const val = document.getElementById('passInput').value;
-    if (val === "so11efecfcefeos1115") {
+    const val = document.getElementById('passInput').value.trim();
+    const targetPass = "so11efecfcefeos1115";
+    
+    if (val === targetPass) {
       document.getElementById('passwordScreen').style.display = 'none';
-      // Şifre doğruysa şimdi Firebase oturumunu kontrol et
-      checkAuthStatus();
+      
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          document.getElementById('loginScreen').style.display = 'none';
+          loadUsers();
+        } else {
+          document.getElementById('loginScreen').style.display = 'flex';
+        }
+      });
     } else {
       alert("Hatalı şifre!");
     }
-  }
-
-  function checkAuthStatus() {
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('loginScreen').style.display = 'none';
-        loadUsers();
-      } else {
-        document.getElementById('loginScreen').style.display = 'flex';
-      }
-    });
   }
 
   function loginWithGoogle() {
@@ -363,11 +344,9 @@
 
   function logout() {
     auth.signOut();
-    // Çıkış yapınca tekrar şifre ekranına döndürebiliriz veya sayfayı yenileyebiliriz
     location.reload();
   }
 
-  // Navigation Logic
   function switchTab(tabId, event) {
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
@@ -534,12 +513,12 @@
       const snap = await db.collection('posts').orderBy('timestamp', 'desc').get();
       tbody.innerHTML = '';
       snap.forEach(doc => {
-        const d.data = doc.data();
+        const d = doc.data();
         tbody.innerHTML += `
           <tr>
-            <td><b>${d.data.authorUsername}</b> <br><span style="font-size:10px;color:gray;">${d.data.authorId}</span></td>
-            <td>${d.data.text}</td>
-            <td style="font-size:11px;">${d.data.timestamp ? new Date(d.data.timestamp.toDate()).toLocaleString() : ''}</td>
+            <td><b>${d.authorUsername}</b> <br><span style="font-size:10px;color:gray;">${d.authorId}</span></td>
+            <td>${d.text}</td>
+            <td style="font-size:11px;">${d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString() : ''}</td>
             <td>
               <button class="btn btn-danger" onclick="deletePost('${doc.id}')">Sil</button>
             </td>
